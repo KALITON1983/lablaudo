@@ -54,6 +54,32 @@ export async function createAppComponent() {
 
   // --- API Routes ---
 
+  // Health check and diagnostic route
+  app.get("/api/health", async (req, res) => {
+    const dbConnected = !!db;
+    let dbQueryOk = false;
+    let error = null;
+    try {
+      if (db) {
+        const result = await db.query("SELECT 1");
+        dbQueryOk = result.rows[0]['?column?'] === 1 || result.rows[0]['1'] === 1 || true;
+      }
+    } catch (err: any) {
+      error = err.message;
+    }
+
+    res.json({
+      status: "ok",
+      environment: process.env.NODE_ENV,
+      database: {
+        initialized: dbConnected,
+        queryOk: dbQueryOk,
+        connected: !!process.env.DATABASE_URL,
+        error: error
+      }
+    });
+  });
+
   // Patient Login
   app.post("/api/auth/login", async (req, res) => {
     const { codigo, senha } = req.body;
