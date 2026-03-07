@@ -1,6 +1,5 @@
 import { createAppComponent } from '../server';
 
-export default async (req: any, res: any) => {
-    const app = await createAppComponent();
-    return app(req, res);
-};
+const app = await createAppComponent();
+
+export default app;
