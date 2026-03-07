@@ -1,0 +1,20 @@
+@import "tailwindcss";
+
+@theme {
+  --color-medical-primary: #00B7C2;
+  /* Official LabLaudo Cyan */
+  --color-medical-secondary: #0F7FAF;
+  /* Official LabLaudo Blue */
+  --color-medical-accent: #26C6DA;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-900;
+  }
+}
+
+.medical-gradient {
+  background: linear-gradient(90deg, #00B7C2, #0F7FAF);
+}
