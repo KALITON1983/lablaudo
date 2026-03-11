@@ -5,18 +5,18 @@ dotenv.config();
 
 const { Pool } = pg;
 
+// If no DATABASE_URL, log but don't crash yet
+if (!process.env.DATABASE_URL) {
+  console.error('DATABASE_URL is missing! Please set it in Vercel Environment Variables.');
+}
+
 const poolConfig: pg.PoolConfig = {
-  connectionString: process.env.DATABASE_URL,
+  connectionString: process.env.DATABASE_URL || "",
   ssl: {
     rejectUnauthorized: false,
   },
   connectionTimeoutMillis: 8000,
 };
-
-// If no DATABASE_URL, create a dummy pool that throws helpful errors
-if (!process.env.DATABASE_URL) {
-  console.error('DATABASE_URL is missing! Please set it in Vercel Environment Variables.');
-}
 
 const pool = new Pool(poolConfig);
 

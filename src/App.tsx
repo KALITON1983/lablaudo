@@ -266,7 +266,7 @@ function LoginPage({ onLoginSuccess, isAdmin, setIsAdmin, initialCode }: { onLog
           const errorData = JSON.parse(text);
           setError(errorData.message || `Erro no servidor (${res.status})`);
         } catch {
-          setError(`Erro ${res.status}: O servidor não retornou uma resposta válida para o cadastro.`);
+          setError(`Erro ${res.status}: ${text.substring(0, 100)}${text.length > 100 ? '...' : ''}`);
         }
         return;
       }
