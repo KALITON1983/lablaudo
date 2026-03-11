@@ -12,12 +12,8 @@ const JWT_SECRET = process.env.JWT_SECRET || "lab-secret-key-123";
 export async function createAppComponent() {
   const app = express();
 
-  // Initialize DB tables
-  try {
-    await initDb();
-  } catch (err) {
-    console.error("Critical: Failed to initialize database", err);
-  }
+  // Initialize DB tables (background - don't block function return for faster cold starts)
+  initDb().catch(err => console.error("Database init failed in background:", err));
 
   app.use(express.json());
   app.use(cookieParser());
