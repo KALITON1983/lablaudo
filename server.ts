@@ -1,5 +1,5 @@
 import express from "express";
-import { createServer as createViteServer } from "vite";
+// Vite is imported dynamically only in development
 import path from "path";
 import multer from "multer";
 import cookieParser from "cookie-parser";
@@ -351,6 +351,7 @@ if (import.meta.url === `file://${process.argv[1].replace(/\\/g, '/')}` || proce
     const PORT = process.env.PORT || 3000;
 
     if (process.env.NODE_ENV !== "production") {
+      const { createServer: createViteServer } = await import("vite");
       const vite = await createViteServer({
         server: { middlewareMode: true },
         appType: "spa",
