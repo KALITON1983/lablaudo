@@ -259,6 +259,18 @@ function LoginPage({ onLoginSuccess, isAdmin, setIsAdmin, initialCode }: { onLog
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password, nome: nomeAdmin }),
       });
+
+      if (!res.ok) {
+        const text = await res.text();
+        try {
+          const errorData = JSON.parse(text);
+          setError(errorData.message || `Erro no servidor (${res.status})`);
+        } catch {
+          setError(`Erro ${res.status}: O servidor não retornou uma resposta válida para o cadastro.`);
+        }
+        return;
+      }
+
       const data = await res.json();
       if (data.success) {
         setSuccessMsg('Admin cadastrado com sucesso! Agora você pode fazer login.');
@@ -269,7 +281,7 @@ function LoginPage({ onLoginSuccess, isAdmin, setIsAdmin, initialCode }: { onLog
       }
     } catch (err: any) {
       console.error('Registration fetch error:', err);
-      setError(`Erro na requisição: ${err.message || 'Erro de conexão'}`);
+      setError(`Erro de conexão no cadastro: ${err.message || 'Verifique sua internet'}`);
     } finally {
       setLoading(false);
     }

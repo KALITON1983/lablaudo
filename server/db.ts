@@ -28,17 +28,18 @@ export async function initDb() {
     }
 
     client = await pool.connect();
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS pacientes (
+
+    // Split into individual queries to reduce transaction load in serverless
+    const queries = [
+      `CREATE TABLE IF NOT EXISTS pacientes (
         id SERIAL PRIMARY KEY,
         nome TEXT NOT NULL,
         cpf TEXT UNIQUE NOT NULL,
         data_nascimento TEXT NOT NULL,
         codigo TEXT UNIQUE NOT NULL,
         senha TEXT NOT NULL
-      );
-
-      CREATE TABLE IF NOT EXISTS exames (
+      )`,
+      `CREATE TABLE IF NOT EXISTS exames (
         id SERIAL PRIMARY KEY,
         paciente_id INTEGER NOT NULL,
         tipo_exame TEXT NOT NULL,
@@ -48,15 +49,18 @@ export async function initDb() {
         arquivo_pdf TEXT,
         medico_responsavel TEXT,
         FOREIGN KEY (paciente_id) REFERENCES pacientes(id)
-      );
-
-      CREATE TABLE IF NOT EXISTS admins (
+      )`,
+      `CREATE TABLE IF NOT EXISTS admins (
         id SERIAL PRIMARY KEY,
         username TEXT UNIQUE NOT NULL,
         password TEXT NOT NULL,
         nome TEXT NOT NULL
-      );
-    `);
+      )`
+    ];
+
+    for (const q of queries) {
+      await client.query(q);
+    }
     isInitialized = true;
     console.log('Database initialized successfully');
   } catch (err) {
