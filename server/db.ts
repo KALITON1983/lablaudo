@@ -5,13 +5,20 @@ dotenv.config();
 
 const { Pool } = pg;
 
-const pool = new Pool({
+const poolConfig: pg.PoolConfig = {
   connectionString: process.env.DATABASE_URL,
   ssl: {
     rejectUnauthorized: false,
   },
-  connectionTimeoutMillis: 8000, // Reduced to 8s to stay under Vercel's 10s limit
-});
+  connectionTimeoutMillis: 8000,
+};
+
+// If no DATABASE_URL, create a dummy pool that throws helpful errors
+if (!process.env.DATABASE_URL) {
+  console.error('DATABASE_URL is missing! Please set it in Vercel Environment Variables.');
+}
+
+const pool = new Pool(poolConfig);
 
 // Flag to prevent multiple initializations in the same instance
 let isInitialized = false;

@@ -1,13 +1,20 @@
 import { createAppComponent } from '../server';
 
-let app;
-try {
-    app = await createAppComponent();
-} catch (err) {
-    console.error("Failed to initialize Vercel application", err);
-    // Re-throw to let Vercel handle the crash if necessary, 
-    // but at least it's logged now.
-    throw err;
-}
+let appPromise: any = null;
 
-export default app;
+export default async function handler(req: any, res: any) {
+    try {
+        if (!appPromise) {
+            appPromise = createAppComponent();
+        }
+        const app = await appPromise;
+        return app(req, res);
+    } catch (err: any) {
+        console.error("Vercel Boot Error:", err);
+        res.status(500).json({
+            success: false,
+            message: "Erro na inicialização do servidor Vercel",
+            error: err.message
+        });
+    }
+}
