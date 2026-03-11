@@ -100,16 +100,22 @@ export default function App() {
     checkAuth();
   }, []);
 
+  const [serverError, setServerError] = useState<string | null>(null);
+
   const checkAuth = async () => {
     try {
       const res = await fetch('/api/auth/me');
+      if (!res.ok) {
+        throw new Error(`Server returned ${res.status}`);
+      }
       const data = await res.json();
       if (data.user) {
         setUser(data.user);
         setView(data.user.role === 'admin' ? 'admin-dashboard' : 'patient-dashboard');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Auth check failed', err);
+      setServerError('Não foi possível conectar ao servidor. Tente novamente mais tarde.');
     } finally {
       setLoading(false);
     }
@@ -124,9 +130,23 @@ export default function App() {
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center bg-slate-50">
-        <div className="text-center space-y-4">
-          <div className="h-12 w-12 border-4 border-medical-primary border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-slate-500 font-medium">Carregando LabPortal...</p>
+        <div className="text-center space-y-4 p-6">
+          {serverError ? (
+            <>
+              <div className="h-12 w-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Lock className="h-6 w-6" />
+              </div>
+              <p className="text-red-600 font-medium">{serverError}</p>
+              <Button onClick={() => { setServerError(null); setLoading(true); checkAuth(); }} variant="outline" size="sm">
+                Tentar Novamente
+              </Button>
+            </>
+          ) : (
+            <>
+              <div className="h-12 w-12 border-4 border-medical-primary border-t-transparent rounded-full animate-spin mx-auto" />
+              <p className="text-slate-500 font-medium">Carregando LabPortal...</p>
+            </>
+          )}
         </div>
       </div>
     );
@@ -234,8 +254,9 @@ function LoginPage({ onLoginSuccess, isAdmin, setIsAdmin, initialCode }: { onLog
       } else {
         setError(data.message);
       }
-    } catch (err) {
-      setError('Erro ao cadastrar admin');
+    } catch (err: any) {
+      console.error('Registration fetch error:', err);
+      setError(`Erro na requisição: ${err.message || 'Erro de conexão'}`);
     } finally {
       setLoading(false);
     }

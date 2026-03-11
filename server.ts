@@ -124,8 +124,13 @@ export async function createAppComponent() {
     try {
       const result = await db.query("INSERT INTO admins (username, password, nome) VALUES ($1, $2, $3) RETURNING id", [username, password, nome]);
       res.json({ success: true, id: result.rows[0].id });
-    } catch (err) {
-      res.status(400).json({ success: false, message: "Usuário já existe" });
+    } catch (err: any) {
+      console.error("Admin registration error:", err);
+      if (err.code === '23505') { // PostgreSQL unique violation
+        res.status(400).json({ success: false, message: "Usuário já existe" });
+      } else {
+        res.status(500).json({ success: false, message: `Erro no servidor: ${err.message || 'Erro desconhecido'}` });
+      }
     }
   });
 
