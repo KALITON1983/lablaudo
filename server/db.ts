@@ -10,13 +10,23 @@ const pool = new Pool({
   ssl: {
     rejectUnauthorized: false,
   },
-  connectionTimeoutMillis: 5000, // 5 second timeout
+  connectionTimeoutMillis: 15000, // Increased to 15s for Neon cold starts
 });
+
+// Flag to prevent multiple initializations in the same instance
+let isInitialized = false;
 
 // Initialize tables
 export async function initDb() {
+  if (isInitialized) return;
+
   let client;
   try {
+    if (!process.env.DATABASE_URL) {
+      console.warn('DATABASE_URL is not defined. Skipping initialization.');
+      return;
+    }
+
     client = await pool.connect();
     await client.query(`
       CREATE TABLE IF NOT EXISTS pacientes (
@@ -47,6 +57,7 @@ export async function initDb() {
         nome TEXT NOT NULL
       );
     `);
+    isInitialized = true;
     console.log('Database initialized successfully');
   } catch (err) {
     console.error('Error initializing database:', err);

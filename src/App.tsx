@@ -223,14 +223,27 @@ function LoginPage({ onLoginSuccess, isAdmin, setIsAdmin, initialCode }: { onLog
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
+
+      if (!res.ok) {
+        const text = await res.text();
+        try {
+          const errorData = JSON.parse(text);
+          setError(errorData.message || `Erro do servidor (${res.status})`);
+        } catch {
+          setError(`Erro ${res.status}: O servidor não retornou uma resposta válida.`);
+        }
+        return;
+      }
+
       const data = await res.json();
       if (data.success) {
         onLoginSuccess(data.user);
       } else {
         setError(data.message);
       }
-    } catch (err) {
-      setError('Erro de conexão com o servidor');
+    } catch (err: any) {
+      console.error('Login error', err);
+      setError(`Erro de conexão: ${err.message || 'Verifique sua internet'}`);
     } finally {
       setLoading(false);
     }

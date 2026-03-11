@@ -63,26 +63,40 @@ export async function createAppComponent() {
 
   // Health check and diagnostic route
   app.get("/api/health", async (req, res) => {
-    const dbConnected = !!db;
-    let dbQueryOk = false;
-    let error = null;
+    let dbStatus = "unknown";
+    let dbError = null;
+    let tablesCheck: any = {};
+
     try {
       if (db) {
+        const start = Date.now();
         const result = await db.query("SELECT 1");
-        dbQueryOk = result.rows[0]['?column?'] === 1 || result.rows[0]['1'] === 1 || true;
+        const duration = Date.now() - start;
+        dbStatus = "connected";
+
+        try {
+          const tablesResult = await db.query("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'");
+          tablesCheck = tablesResult.rows.map(r => r.table_name);
+        } catch (e: any) {
+          tablesCheck = { error: e.message };
+        }
+      } else {
+        dbStatus = "no_pool";
       }
     } catch (err: any) {
-      error = err.message;
+      dbStatus = "error";
+      dbError = err.message;
     }
 
     res.json({
       status: "ok",
+      timestamp: new Date().toISOString(),
       environment: process.env.NODE_ENV,
       database: {
-        initialized: dbConnected,
-        queryOk: dbQueryOk,
-        connected: !!process.env.DATABASE_URL,
-        error: error
+        status: dbStatus,
+        urlProvided: !!process.env.DATABASE_URL,
+        error: dbError,
+        tables: tablesCheck
       }
     });
   });
