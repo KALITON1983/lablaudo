@@ -18,18 +18,16 @@ export async function createAppComponent() {
   app.use(express.json());
   app.use(cookieParser());
 
-  // Ensure uploads directory exists (use /tmp in Vercel/Production)
+  // Ensure uploads directory (production use /tmp is pre-managed or not needed for boot)
   const isVercel = !!process.env.VERCEL;
-  const uploadsDir = isVercel ? path.join("/tmp", "uploads") : path.join(process.cwd(), "uploads");
+  const uploadsDir = isVercel ? "/tmp" : path.join(process.cwd(), "uploads");
 
-  try {
-    if (!fs.existsSync(uploadsDir)) {
-      fs.mkdirSync(uploadsDir, { recursive: true });
-    }
-  } catch (err) {
-    if (isVercel) {
-      console.warn("Vercel context: Could not create /tmp/uploads, using /tmp root", err);
-    } else {
+  if (!isVercel) {
+    try {
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+      }
+    } catch (err) {
       console.error("Warning: Could not create uploads directory", err);
     }
   }
