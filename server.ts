@@ -4,13 +4,20 @@ import path from "path";
 import multer from "multer";
 import cookieParser from "cookie-parser";
 import jwt from "jsonwebtoken";
-import db from "./server/db";
+import db, { initDb } from "./server/db";
 import fs from "fs";
 
 const JWT_SECRET = process.env.JWT_SECRET || "lab-secret-key-123";
 
 export async function createAppComponent() {
   const app = express();
+
+  // Initialize DB tables
+  try {
+    await initDb();
+  } catch (err) {
+    console.error("Critical: Failed to initialize database", err);
+  }
 
   app.use(express.json());
   app.use(cookieParser());
@@ -274,6 +281,16 @@ export async function createAppComponent() {
     const exam = result.rows[0];
     if (!exam) return res.status(404).json({ message: "Exame não encontrado" });
     res.json(exam);
+  });
+
+  // Global Error Handler
+  app.use((err: any, req: any, res: any, next: any) => {
+    console.error("Critical API Error:", err);
+    res.status(500).json({
+      success: false,
+      message: "Erro interno no servidor",
+      details: process.env.NODE_ENV === "development" ? err.message : undefined
+    });
   });
 
   // Serve PDF securely

@@ -7,10 +7,14 @@ const { Pool } = pg;
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false,
+  },
+  connectionTimeoutMillis: 5000, // 5 second timeout
 });
 
 // Initialize tables
-async function initDb() {
+export async function initDb() {
   let client;
   try {
     client = await pool.connect();
@@ -53,6 +57,6 @@ async function initDb() {
   }
 }
 
-initDb();
+// initDb() removed from top-level
 
 export default pool;
