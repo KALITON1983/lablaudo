@@ -59,10 +59,15 @@ export async function createAppComponent() {
     }
   };
 
+  // Helper to catch async errors in Express 4
+  const catchAsync = (fn: Function) => (req: any, res: any, next: any) => {
+    Promise.resolve(fn(req, res, next)).catch(next);
+  };
+
   // --- API Routes ---
 
   // Health check and diagnostic route
-  app.get("/api/health", async (req, res) => {
+  app.get("/api/health", catchAsync(async (req, res) => {
     let dbStatus = "unknown";
     let dbError = null;
     let tablesCheck: any = {};
@@ -70,8 +75,7 @@ export async function createAppComponent() {
     try {
       if (db) {
         const start = Date.now();
-        const result = await db.query("SELECT 1");
-        const duration = Date.now() - start;
+        await db.query("SELECT 1");
         dbStatus = "connected";
 
         try {
@@ -99,10 +103,10 @@ export async function createAppComponent() {
         tables: tablesCheck
       }
     });
-  });
+  }));
 
   // Patient Login
-  app.post("/api/auth/login", async (req, res) => {
+  app.post("/api/auth/login", catchAsync(async (req, res) => {
     const { codigo, senha } = req.body;
     const result = await db.query("SELECT * FROM pacientes WHERE codigo = $1 AND senha = $2", [codigo, senha]);
     const patient = result.rows[0];
@@ -114,10 +118,10 @@ export async function createAppComponent() {
     } else {
       res.status(401).json({ success: false, message: "Código ou senha inválidos" });
     }
-  });
+  }));
 
   // Admin Login
-  app.post("/api/auth/admin/login", async (req, res) => {
+  app.post("/api/auth/admin/login", catchAsync(async (req, res) => {
     const { username, password } = req.body;
     const result = await db.query("SELECT * FROM admins WHERE username = $1 AND password = $2", [username, password]);
     const admin = result.rows[0];
@@ -137,10 +141,10 @@ export async function createAppComponent() {
       }
       res.status(401).json({ success: false, message: "Credenciais administrativas inválidas" });
     }
-  });
+  }));
 
   // Admin Registration
-  app.post("/api/auth/admin/register", async (req, res) => {
+  app.post("/api/auth/admin/register", catchAsync(async (req, res) => {
     const { username, password, nome } = req.body;
     try {
       const result = await db.query("INSERT INTO admins (username, password, nome) VALUES ($1, $2, $3) RETURNING id", [username, password, nome]);
@@ -153,7 +157,7 @@ export async function createAppComponent() {
         res.status(500).json({ success: false, message: `Erro no servidor: ${err.message || 'Erro desconhecido'}` });
       }
     }
-  });
+  }));
 
   app.post("/api/auth/logout", (req, res) => {
     res.clearCookie("token");
